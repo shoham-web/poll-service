@@ -28,8 +28,6 @@ class CreateQuestionRequest(BaseModel):
     option_4: QuestionOption
 
 
-from pydantic import model_validator
-
 
 class UpdateQuestionRequest(BaseModel):
     title: QuestionTitle | None = None

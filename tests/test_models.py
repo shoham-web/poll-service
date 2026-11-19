@@ -22,7 +22,7 @@ def test_invalid_vote():
         vote = CreateVoteRequest(
             user_id=5,
             question_id=1,
-            selected_option=7
+            selected_option=2
         )
 
         print(vote.model_dump())
