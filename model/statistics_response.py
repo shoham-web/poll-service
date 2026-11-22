@@ -14,6 +14,10 @@ class AllQuestionsStatisticsResponse(
     QuestionStatisticsResponse
 ):
     question_title: str
+    option_1: str
+    option_2: str
+    option_3: str
+    option_4: str
 
 
 class UserVoteDetail(BaseModel):

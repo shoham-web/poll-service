@@ -18,9 +18,6 @@ async def get_user(user_id: int) -> dict:
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.get(url)
-            print("Request URL:", url)
-            print("Status Code:", response.status_code)
-            print("Response Body:", response.text)
 
     except httpx.RequestError as error:
         raise UserServiceUnavailableError(

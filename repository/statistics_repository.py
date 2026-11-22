@@ -45,39 +45,41 @@ async def get_question_statistics(question_id: int):
 async def get_all_questions_statistics():
     query = """
         SELECT
-            q.id AS question_id,
-            q.title AS question_title,
+    q.id AS question_id,
+    q.title AS question_title,
+    q.option_1,
+    q.option_2,
+    q.option_3,
+    q.option_4,
 
-            COUNT(v.id) AS total_votes,
+    COUNT(v.id) AS total_votes,
 
-            COUNT(
-                CASE WHEN v.selected_option = 1
-                THEN 1 END
-            ) AS option_1_votes,
+    COUNT(CASE WHEN v.selected_option = 1 THEN 1 END)
+        AS option_1_votes,
 
-            COUNT(
-                CASE WHEN v.selected_option = 2
-                THEN 1 END
-            ) AS option_2_votes,
+    COUNT(CASE WHEN v.selected_option = 2 THEN 1 END)
+        AS option_2_votes,
 
-            COUNT(
-                CASE WHEN v.selected_option = 3
-                THEN 1 END
-            ) AS option_3_votes,
+    COUNT(CASE WHEN v.selected_option = 3 THEN 1 END)
+        AS option_3_votes,
 
-            COUNT(
-                CASE WHEN v.selected_option = 4
-                THEN 1 END
-            ) AS option_4_votes
+    COUNT(CASE WHEN v.selected_option = 4 THEN 1 END)
+        AS option_4_votes
 
-        FROM questions q
+FROM questions q
 
-        LEFT JOIN votes v
-            ON q.id = v.question_id
+LEFT JOIN votes v
+    ON q.id = v.question_id
 
-        GROUP BY q.id, q.title
+GROUP BY
+    q.id,
+    q.title,
+    q.option_1,
+    q.option_2,
+    q.option_3,
+    q.option_4
 
-        ORDER BY q.id
+ORDER BY q.id;
     """
 
     return await database.fetch_all(query=query)
