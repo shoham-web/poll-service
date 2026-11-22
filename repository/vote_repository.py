@@ -133,7 +133,7 @@ async def count_votes_by_user(user_id: int) -> int:
     return int(count)
 
 
-async def delete_votes_by_user(user_id: int):
+async def delete_votes_by_user_id(user_id: int):
 
     query = """
         DELETE FROM votes

@@ -2,13 +2,10 @@ from pymysql.err import IntegrityError as MySQLIntegrityError
 from sqlalchemy.exc import IntegrityError as SQLAlchemyIntegrityError
 from clients.user_client import get_user
 from config.database import database
-from model.vote_request import CreateVoteRequest
+from model.vote_request import CreateVoteRequest, UpdateVoteRequest
 from model.vote_response import VoteResponse
 from repository import question_repository, vote_repository
-from exceptions.vote_exceptions import (
-    VoteAlreadyExistsError,
-    UserNotRegisteredError
-)
+from exceptions.vote_exceptions import (VoteAlreadyExistsError,UserNotRegisteredError, VoteNotFoundError, VoteAccessDeniedError)
 from exceptions.question_exceptions import QuestionNotFoundError
 
 
@@ -80,4 +77,97 @@ async def create_vote(
 
         return VoteResponse.model_validate(
             dict(saved_vote._mapping)
+        )
+
+
+async def get_vote_by_id(
+    vote_id: int
+) -> VoteResponse:
+
+    vote = await vote_repository.get_vote_by_id(
+        vote_id
+    )
+
+    if vote is None:
+        raise VoteNotFoundError(
+            f"Vote with ID {vote_id} was not found"
+        )
+
+    return VoteResponse.model_validate(
+        dict(vote._mapping)
+    )
+
+
+async def update_vote(
+    vote_id: int,
+    requesting_user_id: int,
+    vote_data: UpdateVoteRequest
+) -> VoteResponse:
+
+    await validate_registered_user(requesting_user_id)
+
+    async with database.transaction():
+
+        vote = await vote_repository.get_vote_for_update(
+            vote_id
+        )
+
+        if vote is None:
+            raise VoteNotFoundError(
+                f"Vote with ID {vote_id} was not found"
+            )
+
+        if vote.user_id != requesting_user_id:
+            raise VoteAccessDeniedError(
+                "This vote belongs to another user"
+            )
+
+        await vote_repository.update_vote(
+            vote_id=vote_id,
+            selected_option=vote_data.selected_option
+        )
+
+        updated_vote = await vote_repository.get_vote_by_id(
+            vote_id
+        )
+
+        return VoteResponse.model_validate(
+            dict(updated_vote._mapping)
+        )
+
+
+async def delete_vote(
+    vote_id: int,
+    requesting_user_id: int
+) -> None:
+
+    async with database.transaction():
+
+        vote = await vote_repository.get_vote_for_update(
+            vote_id
+        )
+
+        if vote is None:
+            raise VoteNotFoundError(
+                f"Vote with ID {vote_id} was not found"
+            )
+
+        if vote.user_id != requesting_user_id:
+            raise VoteAccessDeniedError(
+                "This vote belongs to another user"
+            )
+
+        await vote_repository.delete_vote(
+            vote_id
+        )
+
+
+async def delete_all_votes_by_user(
+    user_id: int
+) -> None:
+
+    async with database.transaction():
+
+        await vote_repository.delete_votes_by_user_id(
+            user_id
         )
